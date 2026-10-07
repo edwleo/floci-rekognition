@@ -1,12 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <h1>Analizando archivos con AWS</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+  </head>
+  <body>
+    <!--   <h1>Analizando archivos con AWS</h1>
 
   <form id="uploadForm">
     <div>
@@ -19,54 +23,109 @@
   <div>
     <h3>Resultados del análisis</h3>
     <ul id="listaEtiquetas"></ul>
-  </div>
+  </div> -->
 
-  <script>
-    const form = document.getElementById("uploadForm")
-    const listaEtiquetas = document.getElementById("listaEtiquetas")
+    <section class="section">
+      <div class="container" style="max-width: 600px">
+        <!-- Título principal -->
+        <h1 class="title is-4 has-text-centered has-text-dark mb-5">
+          Analizando archivos con AWS
+        </h1>
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault()  //Detenemos el envío
+        <!-- Formulario -->
+        <form id="uploadForm" class="box p-5 shadow-sm">
+          <div class="field">
+            <label class="label has-text-grey-dark" for="imagen"
+              >Seleccione imagen</label
+            >
+            <div class="file has-name is-fullwidth">
+              <label class="file-label">
+                <input
+                  class="file-input"
+                  type="file"
+                  name="imagen"
+                  id="imagen"
+                  accept="image/*"
+                  required
+                />
+                <span class="file-cta">
+                  <span class="file-label">Buscar archivo...</span>
+                </span>
+                <span class="file-name" id="fileNameDisplay"
+                  >Ningún archivo seleccionado</span
+                >
+              </label>
+            </div>
+          </div>
 
-      //FormData = contenedor de datos
-      const formData = new FormData(form)
+          <div class="field mt-5">
+            <button class="button is-dark is-fullwidth" type="submit">
+              Enviar
+            </button>
+          </div>
+        </form>
 
-      listaEtiquetas.innerHTML = `<li>Analizando imagen con AWS...<li>`
+        <!-- Resultados -->
+        <div class="box p-5 mt-5 shadow-sm">
+          <h3 class="subtitle is-5 has-text-dark mb-3">
+            Resultados del análisis
+          </h3>
+          <ul id="listaEtiquetas" class="content"></ul>
+        </div>
+      </div>
+    </section>
 
-      //Enviar los datos por el API...
-      try{
-        const response = await fetch('/api/analizar', {
-          method: 'POST',
-          body: formData
-        })
-        //El Servicio AWS inicia la resolución...
+    <script>
+      const form = document.getElementById("uploadForm");
+      const listaEtiquetas = document.getElementById("listaEtiquetas");
 
-        const data = await response.json()
+      const fileInput = document.querySelector("#uploadForm input[type=file]");
+      fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+          const fileName = document.querySelector("#fileNameDisplay");
+          fileName.textContent = fileInput.files[0].name;
+        }
+      };
 
-        if (data.success){
-          listaEtiquetas.innerHTML = ``
-          data.labels.forEach(label => {
-            const li = document.createElement("li")
-            li.innerHTML = `Imagen: ${label.Name} - confianza: ${label.Confidence}`
-            listaEtiquetas.appendChild(li)
-          })
-        }else{
-          //CUIDADO: no se deben exponer TODOS LOS ERRORES
-          //¿Cómo se manejan los errores en backend?
-          listaEtiquetas.innerHTML = `
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault(); //Detenemos el envío
+
+        //FormData = contenedor de datos
+        const formData = new FormData(form);
+
+        listaEtiquetas.innerHTML = `<li>Analizando imagen con AWS...<li>`;
+
+        //Enviar los datos por el API...
+        try {
+          const response = await fetch("/api/analizar", {
+            method: "POST",
+            body: formData,
+          });
+          //El Servicio AWS inicia la resolución...
+
+          const data = await response.json();
+
+          if (data.success) {
+            listaEtiquetas.innerHTML = ``;
+            data.labels.forEach((label) => {
+              const li = document.createElement("li");
+              li.innerHTML = `Imagen: ${label.Name} - confianza: ${label.Confidence}`;
+              listaEtiquetas.appendChild(li);
+            });
+          } else {
+            //CUIDADO: no se deben exponer TODOS LOS ERRORES
+            //¿Cómo se manejan los errores en backend?
+            listaEtiquetas.innerHTML = `
             <li>${data.error}</li>
             <li>${data.details}</li>
             <li>${data.code}</li>
-          `
+          `;
+          }
+        } catch (error) {
+          console.error(error);
+          listaEtiquetas.innerHTML = `<li>Error de conexión</li>`;
         }
-      }catch(error){
-        console.error(error)
-        listaEtiquetas.innerHTML = `<li>Error de conexión</li>`
-      }
-
-    })
-
-  </script>
-
-</body>
+      });
+    </script>
+  </body>
 </html>
